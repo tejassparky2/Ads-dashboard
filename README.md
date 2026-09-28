@@ -16,7 +16,10 @@ spend, CPC, CPM, CTR, CPA, ROAS, AOV, funnel and video metrics in one clear view
   - Multiple dashboards (tabs), each started from a template or blank.
   - Layouts save in your browser automatically. You can export them to JSON and import them on another device.
 - **Filters:** date presets or a custom range, previous-period comparison, a multi-campaign filter, and an ad account switcher.
-- **Export:** a full Excel report (Summary, Daily, Campaigns, Ad sets, Ads), CSV and JSON. Each widget can also be downloaded as CSV, Excel or PNG, and the whole dashboard can be printed or saved as PDF.
+- **Visual PDF reports:** download the dashboard as a polished A4 PDF (landscape or portrait). It has a header with the
+  account, date range, comparison period and conversion event, followed by your KPI cards, charts and tables, laid out
+  the way you arranged them. Rows never split across pages. Any single widget can also be downloaded as a PDF or PNG.
+  PDFs always use the light theme, so they print cleanly.
 - **Light and dark mode**, accessible charts with colorblind-checked colors, and a "view as table" option on every chart.
 
 ## Quick start
@@ -88,7 +91,8 @@ src/
     metrics.ts   metric catalog: formulas, formats, which direction is "good"
     events.ts    conversion event aliases
     demo.ts      deterministic demo data shaped like real API responses
-    export.ts    CSV / Excel / JSON / PNG export
+    pdf.ts       visual PDF report (widget snapshots laid out on A4 pages)
+    export.ts    PNG snapshots and layout backup files
   store/         zustand stores: auth, settings, dashboards and widgets (saved in localStorage)
   hooks/         react-query data hooks, theme hooks
   components/
@@ -97,4 +101,5 @@ src/
     layout/      header, filters, export menu, settings
 ```
 
-Built with React 19, TypeScript, Vite, Tailwind CSS v4, Recharts, TanStack Query, Zustand, dnd-kit and SheetJS.
+Built with React 19, TypeScript, Vite, Tailwind CSS v4, Recharts, TanStack Query, Zustand, dnd-kit, jsPDF and
+html-to-image.

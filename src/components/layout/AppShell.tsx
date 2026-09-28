@@ -17,6 +17,7 @@ import { DashboardTabs } from './DashboardTabs'
 import { DateRangePicker } from './DateRangePicker'
 import { ExportMenu } from './ExportMenu'
 import { Logo } from './Logo'
+import { PdfProgress } from './PdfProgress'
 import { SettingsDialog } from './SettingsDialog'
 
 export function AppShell() {
@@ -138,6 +139,7 @@ export function AppShell() {
       </main>
 
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <PdfProgress />
     </div>
   )
 }

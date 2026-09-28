@@ -2,8 +2,7 @@ import {
   ArrowDown,
   ArrowUp,
   Copy,
-  FileSpreadsheet,
-  FileText,
+  FileDown,
   GripVertical,
   ImageDown,
   MoreHorizontal,
@@ -13,7 +12,8 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useCallback, useRef, useState, type HTMLAttributes, type ReactNode } from 'react'
-import { downloadCsv, downloadPng, downloadXlsx, type Table } from '../../lib/export'
+import { downloadPng, type Table } from '../../lib/export'
+import { usePdfExport } from '../../hooks/usePdfExport'
 import { useChartTheme } from '../../hooks/useTheme'
 import { useFilters } from '../../hooks/useData'
 import { formatRange } from '../../lib/dates'
@@ -38,6 +38,7 @@ export function WidgetFrame({ widget, index, total, editing, handleProps, onConf
   const f = useFilters()
   const t = useChartTheme()
   const { removeWidget, duplicateWidget, shiftWidget } = useDashboard()
+  const exportPdf = usePdfExport()
   const [data, setData] = useState<Table>([])
   const [tableView, setTableView] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -52,6 +53,7 @@ export function WidgetFrame({ widget, index, total, editing, handleProps, onConf
   return (
     <section
       ref={ref}
+      data-widget={widget.id}
       aria-label={title}
       className={`print-card group/w relative flex h-full flex-col rounded-2xl border bg-surface shadow-card transition ${editing ? 'border-dashed border-line-strong' : 'border-line'} ${isKpi ? 'p-4' : 'p-4 sm:p-5'}`}
     >
@@ -99,11 +101,17 @@ export function WidgetFrame({ widget, index, total, editing, handleProps, onConf
                   </MenuItem>
                 )}
                 <MenuSeparator />
-                <MenuItem icon={<FileText />} onClick={() => (close(), downloadCsv(data, fileBase))}>
-                  Download CSV
-                </MenuItem>
-                <MenuItem icon={<FileSpreadsheet />} onClick={() => (close(), downloadXlsx([{ name: title, rows: data }], fileBase))}>
-                  Download Excel
+                <MenuItem
+                  icon={<FileDown />}
+                  onClick={() => {
+                    close()
+                    if (ref.current) {
+                      const r = ref.current.getBoundingClientRect()
+                      void exportPdf({ elements: [ref.current], name: title, orientation: r.width >= r.height ? 'landscape' : 'portrait' })
+                    }
+                  }}
+                >
+                  Download PDF
                 </MenuItem>
                 <MenuItem
                   icon={<ImageDown />}
