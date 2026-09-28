@@ -74,6 +74,49 @@ Anyone other than the app's admins, developers and testers needs your app to hav
 This is a static site. Run `npm run build` and host the `dist/` folder anywhere: Vercel, Netlify, Cloudflare Pages,
 GitHub Pages or S3. Asset paths are relative, so it also works from a sub-path.
 
+### On your own VPS (Ubuntu / Debian + Nginx)
+
+`deploy/deploy.sh` builds the app and publishes it behind Nginx. Point your domain's DNS **A record** at the server,
+then run the following on the VPS as a user with `sudo` (or as root):
+
+```bash
+git clone https://github.com/tejassparky2/Ads-dashboard.git
+cd Ads-dashboard
+cp .env.example .env          # optional: set VITE_META_APP_ID for Facebook Login
+
+# First time: installs Node 22, Nginx and Certbot, configures the site and turns on HTTPS
+./deploy/deploy.sh --setup --domain ads.example.com --email you@example.com
+```
+
+To update later, pull the latest code, rebuild and go live:
+
+```bash
+./deploy/deploy.sh
+```
+
+If a deploy goes wrong, switch back to the previous version:
+
+```bash
+./deploy/deploy.sh --rollback
+```
+
+How it works:
+
+- Each deploy is copied to `/var/www/adpulse/releases/<timestamp>`. Nginx serves `/var/www/adpulse/current`, a symlink
+  that is swapped in one atomic step, so visitors never see a half-updated site. The last 5 releases are kept for
+  rollback.
+- The Nginx site ([`deploy/nginx.conf`](deploy/nginx.conf)) caches hashed assets for a year, always revalidates
+  `index.html`, enables gzip, adds basic security headers and blocks dotfiles such as `.env`.
+- Certbot adds HTTPS, redirects HTTP to HTTPS and renews the certificate automatically. Without `--email`, the site is
+  set up on plain HTTP; you can enable HTTPS later with `sudo certbot --nginx -d ads.example.com`.
+- Other options: `--web-root DIR` (default `/var/www/adpulse`) and `--no-pull` (build the code as it is).
+  Run `./deploy/deploy.sh --help` for details.
+- `VITE_*` values from `.env` are built into the site, so re-run the script after changing them.
+
+**Keep it private (optional):** your ad data only loads with a valid Meta token, but anyone can open the page. To add
+a password, run `sudo apt-get install -y apache2-utils && sudo htpasswd -c /etc/nginx/.htpasswd yourname`. Then
+uncomment the two `auth_basic` lines in `/etc/nginx/sites-available/adpulse` and run `sudo systemctl reload nginx`.
+
 ## How the numbers are calculated
 
 - Data comes from the Marketing API `/{ad-account}/insights` endpoint (Graph API `v23.0` by default; you can change it
