@@ -6,6 +6,8 @@ import { rowsToTable } from '../../lib/report'
 import { useEntities, useFilters, useLevel, useTotals } from '../../hooks/useData'
 import type { TableConfig } from '../../store/widgets'
 import { EmptyState, ErrorState, Skeleton } from '../ui/States'
+import { AdPreviewDialog } from './AdPreviewDialog'
+import { AdThumbnail } from './AdThumbnail'
 import { useWidgetData } from '../dashboard/widgetData'
 
 const STATUS_STYLE: Record<string, string> = {
@@ -34,13 +36,17 @@ export function TableWidget({ config }: { config: TableConfig }) {
   const f = useFilters()
   const q = useLevel(config.level)
   const { current: totals } = useTotals()
-  const entities = useEntities(config.level, config.showStatus)
+  // Older saved tables have no showThumbnails flag: default to on.
+  const thumbs = config.level === 'ad' && config.showThumbnails !== false
+  const entities = useEntities(config.level, config.showStatus || thumbs)
+  const [previewKey, setPreviewKey] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [sort, setSort] = useState<Sort>({ col: config.columns[0] ?? 'spend', dir: 'desc' })
   const [limit, setLimit] = useState(config.pageSize)
 
   const status = useMemo(() => Object.fromEntries((entities.data ?? []).map((e) => [e.id, e.status])), [entities.data])
+  const creatives = useMemo(() => new Map((entities.data ?? []).map((e) => [e.id, e.creative])), [entities.data])
 
   const rows = useMemo(() => {
     const s = search.trim().toLowerCase()
@@ -74,6 +80,7 @@ export function TableWidget({ config }: { config: TableConfig }) {
 
   const levelName = config.level === 'campaign' ? 'Campaign' : config.level === 'adset' ? 'Ad set' : 'Ad'
   const shown = rows.slice(0, limit)
+  const previewRow = previewKey ? q.data?.find((r) => r.key === previewKey) : undefined
 
   return (
     <div className={`transition-opacity ${q.isFetching ? 'opacity-60' : ''}`}>
@@ -142,15 +149,20 @@ export function TableWidget({ config }: { config: TableConfig }) {
               {shown.map((r) => (
                 <tr key={r.key} className="group">
                   <td className="sticky left-0 z-10 max-w-72 border-b border-line bg-surface py-2.5 pr-3 pl-4 group-hover:bg-surface-2 sm:pl-5">
-                    <div className="truncate font-medium text-fg" title={r.name}>
-                      {r.name}
-                    </div>
-                    {config.level !== 'campaign' && (
-                      <div className="truncate text-[11px] text-muted" title={r.campaignName}>
-                        {config.level === 'ad' ? `${r.adsetName} · ` : ''}
-                        {r.campaignName}
+                    <div className="flex items-center gap-3">
+                      {thumbs && <AdThumbnail creative={creatives.get(r.key)} name={r.name} onClick={() => setPreviewKey(r.key)} />}
+                      <div className="min-w-0">
+                        <div className="truncate font-medium text-fg" title={r.name}>
+                          {r.name}
+                        </div>
+                        {config.level !== 'campaign' && (
+                          <div className="truncate text-[11px] text-muted" title={r.campaignName}>
+                            {config.level === 'ad' ? `${r.adsetName} · ` : ''}
+                            {r.campaignName}
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </td>
                   {config.showStatus && (
                     <td className="border-b border-line px-3 py-2.5 group-hover:bg-surface-2">
@@ -186,6 +198,17 @@ export function TableWidget({ config }: { config: TableConfig }) {
             )}
           </table>
         </div>
+      )}
+      {previewRow && (
+        <AdPreviewDialog
+          row={previewRow}
+          creative={creatives.get(previewRow.key)}
+          status={status[previewRow.key]}
+          metrics={config.columns.slice(0, 9)}
+          ctx={f.ctx}
+          currency={f.currency}
+          onClose={() => setPreviewKey(null)}
+        />
       )}
       {rows.length > limit && (
         <div className="mt-3 flex justify-center" data-export-ignore>

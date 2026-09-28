@@ -39,6 +39,8 @@ export interface TableConfig {
   level: 'campaign' | 'adset' | 'ad'
   columns: string[]
   showStatus: boolean
+  /** Ad level only; undefined (older saved layouts) means on. */
+  showThumbnails?: boolean
   pageSize: number
 }
 

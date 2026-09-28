@@ -5,7 +5,7 @@
 import { differenceInCalendarDays, parseISO } from 'date-fns'
 import { eachDay } from './dates'
 import { parseRow } from './meta/parse'
-import type { AdAccount, BreakdownKey, EntityStatus, InsightRow, InsightsQuery, MetaUser, RawInsightRow } from './types'
+import type { AdAccount, BreakdownKey, CreativePreview, EntityStatus, InsightRow, InsightsQuery, MetaUser, RawInsightRow } from './types'
 
 function hash(s: string): number {
   let h = 2166136261
@@ -95,6 +95,30 @@ const CAMPAIGNS: DemoCampaign[] = SPEC.map(([name, objective, p, adsets, ads], c
     })),
   }
 })
+
+const VIDEO_WORDS = /reel|video|ugc|story|hook|founder|behind/i
+
+const xml = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+/** A generated square "creative" so demo mode can show thumbnails offline. */
+function demoCreative(ad: DemoAd): CreativePreview {
+  const video = VIDEO_WORDS.test(ad.name)
+  const h1 = Math.floor(rand(ad.id + 'h') * 360)
+  const h2 = (h1 + 40 + Math.floor(rand(ad.id + 'h2') * 80)) % 360
+  const title = xml(ad.name.split(' · ')[0])
+  const product =
+    rand(ad.id + 'shape') < 0.5
+      ? '<rect x="130" y="95" width="140" height="170" rx="22" fill="#fff" fill-opacity=".92"/><rect x="160" y="130" width="80" height="12" rx="6" fill="hsl(' + h1 + ',55%,55%)"/><rect x="160" y="155" width="55" height="10" rx="5" fill="#0002"/>'
+      : '<circle cx="200" cy="175" r="85" fill="#fff" fill-opacity=".92"/><circle cx="200" cy="175" r="42" fill="hsl(' + h2 + ',60%,55%)"/>'
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">` +
+    `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${h1},70%,62%)"/><stop offset="1" stop-color="hsl(${h2},65%,42%)"/></linearGradient></defs>` +
+    `<rect width="400" height="400" fill="url(#g)"/>${product}` +
+    `<rect x="0" y="300" width="400" height="100" fill="#000" fill-opacity=".35"/>` +
+    `<text x="24" y="360" font-family="system-ui,sans-serif" font-size="30" font-weight="600" fill="#fff">${title}</text></svg>`
+  const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+  return { thumbnailUrl: url, imageUrl: video ? undefined : url, type: video ? 'VIDEO' : 'PHOTO' }
+}
 
 /** Mirrors Meta's `effective_status`, which includes the parents' state. */
 function adStatus(c: DemoCampaign, ad: DemoAd): string {
@@ -322,7 +346,7 @@ function demoEntities(level: 'campaign' | 'adset' | 'ad'): EntityStatus[] {
     for (const as of c.adsets) {
       if (level === 'adset')
         out.push({ id: as.id, name: as.name, status: paused ? 'CAMPAIGN_PAUSED' : 'ACTIVE', dailyBudget: Math.round(c.p.budget / c.adsets.length) })
-      if (level === 'ad') for (const ad of as.ads) out.push({ id: ad.id, name: ad.name, status: adStatus(c, ad) })
+      if (level === 'ad') for (const ad of as.ads) out.push({ id: ad.id, name: ad.name, status: adStatus(c, ad), creative: demoCreative(ad) })
     }
   }
   return out

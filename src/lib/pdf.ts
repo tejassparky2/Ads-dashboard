@@ -25,6 +25,14 @@ const MIN_LAYOUT_WIDTH = 1100 // px
 
 const skipIgnored = (el: Node) => !(el instanceof HTMLElement && el.dataset.exportIgnore !== undefined)
 
+/**
+ * Used in place of images the snapshot can't read (e.g. ad thumbnails served
+ * from Meta's CDN without CORS headers), so one image never fails the export.
+ */
+export const IMAGE_PLACEHOLDER =
+  'data:image/svg+xml;charset=utf-8,' +
+  encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4"><rect width="4" height="4" fill="#e1e0d9"/></svg>')
+
 function buildHeader(meta: PdfMeta, width: number): HTMLElement {
   // The snapshot copies the captured node's own styles, so it must not be the
   // off-screen positioned element itself – it lives inside a hidden host.
@@ -107,7 +115,7 @@ export async function exportPdf(elements: HTMLElement[], opts: PdfOptions): Prom
 
   const shots: Shot[] = []
   for (const [i, el] of elements.entries()) {
-    const png = await toPng(el, { pixelRatio: 2, backgroundColor: '#ffffff', filter: skipIgnored })
+    const png = await toPng(el, { pixelRatio: 2, backgroundColor: '#ffffff', filter: skipIgnored, imagePlaceholder: IMAGE_PLACEHOLDER })
     shots.push({ rect: rects[i], png })
     opts.onProgress?.(i + 2, total)
   }
