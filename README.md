@@ -12,7 +12,8 @@ spend, CPC, CPM, CTR, CPA, ROAS, AOV, funnel and video metrics in one clear view
 - **Pick your conversion event:** purchases, leads, registrations, adds to cart, app installs, messaging, or any custom action type. CPA, ROAS and conversion rate update everywhere.
 - **Customizable dashboards:**
   - **Customize** mode: drag widgets to reorder them (mouse, touch or keyboard). Change each widget's metric, chart type, grouping and width.
-  - Six widget types: KPI cards (with change vs. previous period and a sparkline), trend charts (line, area or columns; daily, weekly or monthly; previous-period overlay), top performers, audience and placement breakdowns (age, gender, platform, placement, device, country, region), conversion funnel, and a sortable, searchable performance table with the columns you choose.
+  - Six widget types: KPI cards (with change vs. previous period and a sparkline), trend charts (line, area or columns; daily, weekly or monthly; previous-period overlay), top performers, audience and placement breakdowns (age, gender, platform, placement, device, country, region), conversion funnel, and a sortable, searchable performance table with the columns you choose. At ad level the table shows each
+    ad's creative thumbnail; click it for a larger preview with the ad's numbers.
   - Multiple dashboards (tabs), each started from a template or blank.
   - Layouts save in your browser automatically. You can export them to JSON and import them on another device.
 - **Filters:** date presets or a custom range, previous-period comparison, a multi-campaign filter, an ad account

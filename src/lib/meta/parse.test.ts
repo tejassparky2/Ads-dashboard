@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { insightsParams } from './api'
+import { fetchEntities, insightsParams, type GraphClient } from './api'
 import { parseRow, prettyDimension } from './parse'
 
 describe('parseRow', () => {
@@ -82,5 +82,41 @@ describe('insightsParams', () => {
       { field: 'ad.effective_status', operator: 'IN', value: ['ACTIVE'] },
     ])
     expect(insightsParams({ accountId: 'act_1', level: 'account', range }).filtering).toBeUndefined()
+  })
+})
+
+describe('fetchEntities', () => {
+  it('requests ad creatives and maps their previews', async () => {
+    const calls: { path: string; params?: Record<string, string> }[] = []
+    const client: GraphClient = {
+      get: async () => {
+        throw new Error('unused')
+      },
+      getAll: async <T,>(path: string, params?: Record<string, string>) => {
+        calls.push({ path, params })
+        return [
+          { id: '1', name: 'Reel', effective_status: 'ACTIVE', creative: { thumbnail_url: 'https://x/t.jpg', object_type: 'VIDEO' } },
+          { id: '2', name: 'No creative', effective_status: 'PAUSED' },
+        ] as T[]
+      },
+    }
+    const ads = await fetchEntities(client, 'act_1', 'ad')
+    expect(calls[0].path).toBe('act_1/ads')
+    expect(calls[0].params?.fields).toContain('creative{thumbnail_url,image_url,object_type}')
+    expect(ads[0].creative).toEqual({ thumbnailUrl: 'https://x/t.jpg', imageUrl: undefined, type: 'VIDEO' })
+    expect(ads[1].creative).toBeUndefined()
+  })
+
+  it('does not request creatives for campaigns', async () => {
+    let fields = ''
+    const client = {
+      get: async () => ({}),
+      getAll: async (_p: string, params?: Record<string, string>) => {
+        fields = params?.fields ?? ''
+        return []
+      },
+    } as unknown as GraphClient
+    await fetchEntities(client, 'act_1', 'campaign')
+    expect(fields).not.toContain('creative')
   })
 })

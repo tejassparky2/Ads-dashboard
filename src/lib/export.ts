@@ -22,9 +22,10 @@ export function downloadJson(data: unknown, filename: string) {
 }
 
 export async function downloadPng(node: HTMLElement, filename: string, background: string) {
-  const { toPng } = await import('html-to-image')
+  const [{ toPng }, { IMAGE_PLACEHOLDER }] = await Promise.all([import('html-to-image'), import('./pdf')])
   const dataUrl = await toPng(node, {
     pixelRatio: 2,
+    imagePlaceholder: IMAGE_PLACEHOLDER,
     backgroundColor: background,
     filter: (el) => !(el instanceof HTMLElement && el.dataset.exportIgnore !== undefined),
   })

@@ -27,6 +27,13 @@ describe('demo data', () => {
     expect(active.every((r) => status[r.key] === 'ACTIVE')).toBe(true)
   })
 
+  it('gives every demo ad a creative thumbnail', async () => {
+    const ads = await demoApi.entities('ad')
+    expect(ads.every((a) => a.creative?.thumbnailUrl?.startsWith('data:image/svg+xml'))).toBe(true)
+    expect(ads.some((a) => a.creative?.type === 'VIDEO')).toBe(true)
+    expect(ads.some((a) => a.creative?.type === 'PHOTO')).toBe(true)
+  })
+
   it('respects the campaign filter', async () => {
     const all = await demoApi.insights({ accountId: 'act_1', level: 'campaign', range })
     const one = await demoApi.insights({ accountId: 'act_1', level: 'campaign', range, campaignIds: [all[0].key] })

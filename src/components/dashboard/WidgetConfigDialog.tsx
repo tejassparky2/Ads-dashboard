@@ -179,6 +179,13 @@ export function WidgetConfigDialog({ widget, onClose }: { widget: Widget; onClos
               <MetricPicker value={draft.config.columns} onChange={(columns) => cfg({ columns })} ctx={f.ctx} addLabel="Add column…" />
             </Field>
             <Switch label="Show delivery status" checked={draft.config.showStatus} onChange={(showStatus) => cfg({ showStatus })} />
+            {draft.config.level === 'ad' && (
+              <Switch
+                label="Show ad thumbnails"
+                checked={draft.config.showThumbnails !== false}
+                onChange={(showThumbnails) => cfg({ showThumbnails })}
+              />
+            )}
             <Field label="Rows per page">
               <Select value={draft.config.pageSize} onChange={(e) => cfg({ pageSize: Number(e.target.value) })}>
                 {[10, 15, 25, 50, 100].map((n) => (

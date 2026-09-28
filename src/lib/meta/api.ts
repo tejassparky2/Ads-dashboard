@@ -172,6 +172,7 @@ interface RawEntity {
   objective?: string
   daily_budget?: string
   lifetime_budget?: string
+  creative?: { thumbnail_url?: string; image_url?: string; object_type?: string }
 }
 
 export async function fetchEntities(
@@ -182,8 +183,13 @@ export async function fetchEntities(
   signal?: AbortSignal,
 ): Promise<EntityStatus[]> {
   const edge = level === 'campaign' ? 'campaigns' : level === 'adset' ? 'adsets' : 'ads'
-  const fields = level === 'ad' ? 'id,name,effective_status' : 'id,name,effective_status,daily_budget,lifetime_budget' + (level === 'campaign' ? ',objective' : '')
-  const rows = await client.getAll<RawEntity>(`${accountId}/${edge}`, { fields, limit: '500' }, signal, 20)
+  const fields =
+    level === 'ad'
+      ? 'id,name,effective_status,creative{thumbnail_url,image_url,object_type}'
+      : 'id,name,effective_status,daily_budget,lifetime_budget' + (level === 'campaign' ? ',objective' : '')
+  // Expanding creatives makes each ad heavier, so page ads in smaller chunks.
+  const limit = level === 'ad' ? '200' : '500'
+  const rows = await client.getAll<RawEntity>(`${accountId}/${edge}`, { fields, limit }, signal, 50)
   // Budgets are returned in the currency's minor unit (cents), except for
   // currencies Meta treats as having no minor unit.
   const offset = ZERO_DECIMAL_CURRENCIES.has(currency) ? 1 : 100
@@ -194,6 +200,9 @@ export async function fetchEntities(
     objective: r.objective,
     dailyBudget: r.daily_budget ? Number(r.daily_budget) / offset : undefined,
     lifetimeBudget: r.lifetime_budget ? Number(r.lifetime_budget) / offset : undefined,
+    creative: r.creative
+      ? { thumbnailUrl: r.creative.thumbnail_url, imageUrl: r.creative.image_url, type: r.creative.object_type }
+      : undefined,
   }))
 }
 

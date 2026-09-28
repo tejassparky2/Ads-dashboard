@@ -103,6 +103,17 @@ export interface EntityStatus {
   objective?: string
   dailyBudget?: number
   lifetimeBudget?: number
+  /** Ads only: the creative's preview. */
+  creative?: CreativePreview
+}
+
+export interface CreativePreview {
+  /** Small square preview Meta generates for every creative. */
+  thumbnailUrl?: string
+  /** Full-size image, when the creative is image based. */
+  imageUrl?: string
+  /** Meta's object_type, e.g. PHOTO, VIDEO, SHARE. */
+  type?: string
 }
 
 export interface MetaUser {
