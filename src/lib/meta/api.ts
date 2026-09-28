@@ -120,9 +120,11 @@ export function insightsParams(q: InsightsQuery): Record<string, string> {
   }
   if (q.daily) params.time_increment = '1'
   if (q.breakdown) params.breakdowns = apiBreakdowns(q.breakdown)
-  if (q.campaignIds?.length) {
-    params.filtering = JSON.stringify([{ field: 'campaign.id', operator: 'IN', value: q.campaignIds }])
-  }
+  const filtering: { field: string; operator: string; value: string[] }[] = []
+  if (q.campaignIds?.length) filtering.push({ field: 'campaign.id', operator: 'IN', value: q.campaignIds })
+  // effective_status is ACTIVE only when the ad and its ad set and campaign are all on.
+  if (q.activeOnly) filtering.push({ field: 'ad.effective_status', operator: 'IN', value: ['ACTIVE'] })
+  if (filtering.length) params.filtering = JSON.stringify(filtering)
   return params
 }
 

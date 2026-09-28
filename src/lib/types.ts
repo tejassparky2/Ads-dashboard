@@ -26,6 +26,8 @@ export interface InsightsQuery {
   breakdown?: BreakdownKey
   /** Restrict to these campaigns (empty / undefined = all). */
   campaignIds?: string[]
+  /** Only count ads whose delivery status is currently ACTIVE. */
+  activeOnly?: boolean
 }
 
 export interface RawAction {

@@ -42,6 +42,7 @@ export interface Filters {
   prevRange: DateRange
   compare: boolean
   campaignIds: string[]
+  activeOnly: boolean
   ctx: MetricContext
 }
 
@@ -63,15 +64,30 @@ export function useFilters(): Filters {
     prevRange,
     compare: s.compare,
     campaignIds: s.campaignIds,
+    activeOnly: s.activeOnly,
     ctx,
   }
 }
 
 export function insightsKey(sourceKey: string, q: InsightsQuery) {
-  return ['insights', sourceKey, q.accountId, q.level, q.range.since, q.range.until, !!q.daily, q.breakdown ?? '', [...(q.campaignIds ?? [])].sort().join(',')]
+  return [
+    'insights',
+    sourceKey,
+    q.accountId,
+    q.level,
+    q.range.since,
+    q.range.until,
+    !!q.daily,
+    q.breakdown ?? '',
+    [...(q.campaignIds ?? [])].sort().join(','),
+    !!q.activeOnly,
+  ]
 }
 
-export function useInsights(q: Omit<InsightsQuery, 'accountId' | 'range' | 'campaignIds'> & { period?: 'current' | 'previous' }, enabled = true) {
+export function useInsights(
+  q: Omit<InsightsQuery, 'accountId' | 'range' | 'campaignIds' | 'activeOnly'> & { period?: 'current' | 'previous' },
+  enabled = true,
+) {
   const source = useDataSource()
   const key = useSourceKey()
   const f = useFilters()
@@ -83,6 +99,7 @@ export function useInsights(q: Omit<InsightsQuery, 'accountId' | 'range' | 'camp
         daily: q.daily,
         breakdown: q.breakdown,
         campaignIds: f.campaignIds,
+        activeOnly: f.activeOnly,
       }
     : null
   return useQuery({

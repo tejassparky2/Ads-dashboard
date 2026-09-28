@@ -47,6 +47,7 @@ export function usePdfExport() {
           { label: 'Date range', value: formatRange(f.range) },
           ...(f.compare ? [{ label: 'Compared with', value: formatRange(f.prevRange) }] : []),
           { label: 'Campaigns', value: f.campaignIds.length ? `${f.campaignIds.length} selected` : 'All campaigns' },
+          { label: 'Ads', value: f.activeOnly ? 'Active ads only' : 'All ads' },
           { label: 'Conversion event', value: eventLabel(f.ctx.conversionEvent) },
           { label: 'Currency', value: f.currency },
         ]

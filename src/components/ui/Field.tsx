@@ -69,14 +69,16 @@ export function Segmented<T extends string>({
   onChange,
   options,
   size = 'md',
+  ariaLabel,
 }: {
   value: T
   onChange: (v: T) => void
   options: { value: T; label: ReactNode; title?: string }[]
   size?: 'sm' | 'md'
+  ariaLabel?: string
 }) {
   return (
-    <div className="inline-flex rounded-xl bg-surface-3 p-0.5" role="radiogroup">
+    <div className="inline-flex shrink-0 rounded-xl bg-surface-3 p-0.5" role="radiogroup" aria-label={ariaLabel}>
       {options.map((o) => (
         <button
           key={o.value}
