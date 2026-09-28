@@ -10,7 +10,7 @@ import { useSettings } from '../../store/settings'
 import { Dashboard } from '../dashboard/Dashboard'
 import { Button } from '../ui/Button'
 import { MenuItem, Popover } from '../ui/Popover'
-import { Switch } from '../ui/Field'
+import { Segmented, Switch } from '../ui/Field'
 import { AccountSwitcher } from './AccountSwitcher'
 import { CampaignFilter } from './CampaignFilter'
 import { DashboardTabs } from './DashboardTabs'
@@ -96,6 +96,24 @@ export function AppShell() {
           <div className="flex flex-wrap items-center gap-2">
             <DateRangePicker />
             <CampaignFilter />
+            <Segmented
+              ariaLabel="Which ads to include"
+              value={f.activeOnly ? 'active' : 'all'}
+              onChange={(v) => setSettings({ activeOnly: v === 'active' })}
+              options={[
+                { value: 'all', label: 'All ads', title: 'Include every ad, including paused, archived and deleted ones' },
+                {
+                  value: 'active',
+                  label: (
+                    <>
+                      <span className="h-2 w-2 rounded-full bg-good" aria-hidden />
+                      Active ads
+                    </>
+                  ),
+                  title: 'Only ads that are delivering right now (ad, ad set and campaign all on)',
+                },
+              ]}
+            />
             <div className="flex h-10 shrink-0 items-center rounded-xl border border-line-strong bg-surface px-3 shadow-card">
               <Switch label={<span className="text-sm font-medium whitespace-nowrap">Compare</span>} checked={f.compare} onChange={(compare) => setSettings({ compare })} />
             </div>

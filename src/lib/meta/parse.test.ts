@@ -71,4 +71,16 @@ describe('insightsParams', () => {
     expect(p.fields).toContain('adset_name')
     expect(p.fields).not.toContain('ad_name')
   })
+
+  it('filters to currently active ads, combined with the campaign filter', () => {
+    const range = { since: '2026-09-01', until: '2026-09-07' }
+    expect(JSON.parse(insightsParams({ accountId: 'act_1', level: 'account', range, activeOnly: true }).filtering)).toEqual([
+      { field: 'ad.effective_status', operator: 'IN', value: ['ACTIVE'] },
+    ])
+    expect(JSON.parse(insightsParams({ accountId: 'act_1', level: 'account', range, activeOnly: true, campaignIds: ['9'] }).filtering)).toEqual([
+      { field: 'campaign.id', operator: 'IN', value: ['9'] },
+      { field: 'ad.effective_status', operator: 'IN', value: ['ACTIVE'] },
+    ])
+    expect(insightsParams({ accountId: 'act_1', level: 'account', range }).filtering).toBeUndefined()
+  })
 })

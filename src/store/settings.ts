@@ -14,6 +14,8 @@ interface SettingsState {
   customRange: DateRange | null
   accountId: string | null
   campaignIds: string[]
+  /** Only include ads that are currently delivering. */
+  activeOnly: boolean
   fbAppId: string
   set: (p: Partial<Omit<SettingsState, 'set'>>) => void
 }
@@ -28,6 +30,7 @@ export const useSettings = create<SettingsState>()(
       customRange: null,
       accountId: null,
       campaignIds: [],
+      activeOnly: false,
       fbAppId: '',
       set: (p) => set(p),
     }),

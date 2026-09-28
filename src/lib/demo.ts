@@ -47,7 +47,14 @@ interface DemoCampaign {
   name: string
   objective: string
   p: Profile
-  adsets: { id: string; name: string; ads: { id: string; name: string }[] }[]
+  adsets: { id: string; name: string; ads: DemoAd[] }[]
+}
+
+interface DemoAd {
+  id: string
+  name: string
+  /** Paused individually this many days ago. */
+  pausedDaysAgo?: number
 }
 
 const P = (p: Partial<Profile>): Profile => ({
@@ -75,10 +82,25 @@ const CAMPAIGNS: DemoCampaign[] = SPEC.map(([name, objective, p, adsets, ads], c
     adsets: adsets.map((as, ai) => ({
       id: `${cid}${ai}1`,
       name: as,
-      ads: ads.map((ad, di) => ({ id: `${cid}${ai}${di}2`, name: `${ad}${adsets.length > 1 ? ` · ${String.fromCharCode(65 + ai)}` : ''}` })),
+      ads: ads.map((ad, di) => {
+        const id = `${cid}${ai}${di}2`
+        // Some losing creatives get switched off, like in a real account.
+        const paused = ads.length > 1 && di === ads.length - 1 && rand(id + 'paused') < 0.45
+        return {
+          id,
+          name: `${ad}${adsets.length > 1 ? ` · ${String.fromCharCode(65 + ai)}` : ''}`,
+          pausedDaysAgo: paused ? 3 + Math.floor(rand(id + 'when') * 18) : undefined,
+        }
+      }),
     })),
   }
 })
+
+/** Mirrors Meta's `effective_status`, which includes the parents' state. */
+function adStatus(c: DemoCampaign, ad: DemoAd): string {
+  if (c.p.pausedDaysAgo !== undefined) return 'CAMPAIGN_PAUSED'
+  return ad.pausedDaysAgo !== undefined ? 'PAUSED' : 'ACTIVE'
+}
 
 type M = Record<'spend' | 'impressions' | 'reach' | 'clicks' | 'link' | 'lpv' | 'vc' | 'atc' | 'ic' | 'purchase' | 'revenue' | 'lead' | 'video' | 'thruplay' | 'engagement', number>
 
@@ -90,11 +112,13 @@ function add(a: M, b: M, f = 1) {
 
 const TODAY = new Date()
 
-function adDay(c: DemoCampaign, adId: string, adShare: number, date: string): M {
+function adDay(c: DemoCampaign, ad: DemoAd, adShare: number, date: string): M {
   const m = zero()
+  const adId = ad.id
   const ago = differenceInCalendarDays(TODAY, parseISO(date))
   if (ago < 0 || ago > c.p.startDaysAgo) return m
   if (c.p.pausedDaysAgo !== undefined && ago < c.p.pausedDaysAgo) return m
+  if (ad.pausedDaysAgo !== undefined && ago < ad.pausedDaysAgo) return m
   const d = parseISO(date)
   const dow = [0.86, 1.02, 1.04, 1.0, 0.98, 1.08, 0.92][d.getDay()]
   const season = 1 + 0.18 * Math.sin((d.getMonth() + d.getDate() / 30) * (Math.PI / 6)) + (d.getMonth() === 10 ? 0.35 : 0)
@@ -233,11 +257,12 @@ function demoInsights(q: InsightsQuery): InsightRow[] {
     for (const as of c.adsets) {
       const adsetShare = 1 / c.adsets.length
       for (const [ai, ad] of as.ads.entries()) {
+        if (q.activeOnly && adStatus(c, ad) !== 'ACTIVE') continue
         // Uneven delivery between ads, like a real auction.
         const weights = as.ads.map((_, i) => 0.6 + rand(`${as.id}w${i}`) * 1.4)
         const adShare = (adsetShare * weights[ai]) / weights.reduce((x, y) => x + y, 0)
         for (const date of days) {
-          const m = adDay(c, ad.id, adShare, date)
+          const m = adDay(c, ad, adShare, date)
           if (!m.impressions) continue
           const extra: Record<string, string> = {}
           let key = 'all'
@@ -292,11 +317,12 @@ function demoInsights(q: InsightsQuery): InsightRow[] {
 function demoEntities(level: 'campaign' | 'adset' | 'ad'): EntityStatus[] {
   const out: EntityStatus[] = []
   for (const c of CAMPAIGNS) {
-    const status = c.p.pausedDaysAgo !== undefined ? 'PAUSED' : 'ACTIVE'
-    if (level === 'campaign') out.push({ id: c.id, name: c.name, status, objective: c.objective, dailyBudget: c.p.budget })
+    const paused = c.p.pausedDaysAgo !== undefined
+    if (level === 'campaign') out.push({ id: c.id, name: c.name, status: paused ? 'PAUSED' : 'ACTIVE', objective: c.objective, dailyBudget: c.p.budget })
     for (const as of c.adsets) {
-      if (level === 'adset') out.push({ id: as.id, name: as.name, status, dailyBudget: Math.round(c.p.budget / c.adsets.length) })
-      if (level === 'ad') for (const ad of as.ads) out.push({ id: ad.id, name: ad.name, status })
+      if (level === 'adset')
+        out.push({ id: as.id, name: as.name, status: paused ? 'CAMPAIGN_PAUSED' : 'ACTIVE', dailyBudget: Math.round(c.p.budget / c.adsets.length) })
+      if (level === 'ad') for (const ad of as.ads) out.push({ id: ad.id, name: ad.name, status: adStatus(c, ad) })
     }
   }
   return out

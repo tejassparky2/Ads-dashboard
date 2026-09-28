@@ -15,7 +15,10 @@ spend, CPC, CPM, CTR, CPA, ROAS, AOV, funnel and video metrics in one clear view
   - Six widget types: KPI cards (with change vs. previous period and a sparkline), trend charts (line, area or columns; daily, weekly or monthly; previous-period overlay), top performers, audience and placement breakdowns (age, gender, platform, placement, device, country, region), conversion funnel, and a sortable, searchable performance table with the columns you choose.
   - Multiple dashboards (tabs), each started from a template or blank.
   - Layouts save in your browser automatically. You can export them to JSON and import them on another device.
-- **Filters:** date presets or a custom range, previous-period comparison, a multi-campaign filter, and an ad account switcher.
+- **Filters:** date presets or a custom range, previous-period comparison, a multi-campaign filter, an ad account
+  switcher, and an **All ads / Active ads** toggle. "Active ads" counts only ads that are delivering right now (the ad,
+  its ad set and its campaign are all on). It's applied in the Meta API request, so every KPI, chart, table and PDF
+  reflects it.
 - **Visual PDF reports:** download the dashboard as a polished A4 PDF (landscape or portrait). It has a header with the
   account, date range, comparison period and conversion event, followed by your KPI cards, charts and tables, laid out
   the way you arranged them. Rows never split across pages. Any single widget can also be downloaded as a PDF or PNG.
